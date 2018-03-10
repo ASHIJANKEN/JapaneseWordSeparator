@@ -3,9 +3,9 @@
   {
     "button": "button1", "count": 2,
     "command": "",
-    // "press_command": "drag_select_jp",
-    "press_command": "drag_select",
-    "press_args": {"by": "words"}
+    "press_command": "drag_select_jp",
+    // "press_command": "drag_select",
+    // "press_args": {"by": "words"}
   },
   {
     "button": "button1", "count": 2, "modifiers": ["ctrl"],
