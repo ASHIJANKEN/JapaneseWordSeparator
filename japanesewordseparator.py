@@ -7,33 +7,30 @@ import sublime_plugin
 from tinysegmenter_python import segment
 import re
 
-#TextCommandクラスよりもこっちが先に呼び出される
+# TextCommandクラスよりもこっちが先に呼び出される
 class JapaneseDragSelectCommand(sublime_plugin.EventListener):
   def on_text_command(self, view, command_name, args):
     if command_name == "drag_select_jp":
       print("drag_select_called")
-      view.run_command("drag_select", {"by": "words"})
-
-      # self.view.sel().clear()
-      # print(view.sel()[0])
-      # point = view.sel()[0].b
-      # view.sel().clear()
-      # region = sublime.Region(point - 1, point + 1)
-      # view.sel().add(region)
-      # print(view.sel()[0])
-      # self.view.sel().add([region])
     elif command_name == "drag_select_additive_jp":
       print("drag_select_additive_called")
     elif command_name == "drag_select_subtractive_jp":
       print("drag_select_subtractive_called")
-      # expand_by_class(point, classes, <separators>) 
-      print(view.substr(self.view.sel()[0]))
-      # self.view.insert(edit, 0, self.view.sel())
 
 class DragSelectJp(sublime_plugin.TextCommand):
-  def run(self, edit):
-    point = self.view.sel()[0].b
-    self.view.sel().clear()
+  sels_num = 0
+
+  def run(self, edit, additive=False, subtractive=False):
+    print('***************************************************')
+
+    if additive == False:
+      DragSelectJp.sels_num = 0
+      point = self.view.sel()[DragSelectJp.sels_num].b
+      self.view.sel().clear()
+    else:
+      DragSelectJp.sels_num += 1
+      point = self.view.sel()[DragSelectJp.sels_num].b
+    print(DragSelectJp.sels_num)
 
     # STの機能で単語選択
     canditate_region = self.view.word(point)
