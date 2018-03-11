@@ -29,7 +29,6 @@ class MouseMoveListener(sublime_plugin.EventListener):
 
   def expand_region(self, view, point):
     regions = [r for r in view.sel()]
-    # print(regions)
 
     new_canditate = view.word(point)
     new_seg = find_seg_en_jp(view, new_canditate, point)
@@ -58,7 +57,6 @@ class DragSelectJp(sublime_plugin.TextCommand):
     # sleect a word using API
     # With this way, we can use "word_separators" in "Preferences.sublime-settings."
     canditate_region = self.view.word(point)
-    # print("({}) ({})".format(canditate_region.a, canditate_region.b))
 
     point_seg = find_seg_en_jp(self.view, canditate_region, point)
 
@@ -78,18 +76,18 @@ def find_seg_en_jp(view, canditate_region, point):
   if not reg.search(canditate_str):
     return canditate_region
 
-  # Fing a segment using tinysegmenter from the Japanese sentence.
+  # Fing segments using tinysegmenter from the Japanese sentence.
   segs = segment(canditate_str)
 
   # If canditate_region contain only one word
   if len(segs) == 1:
     return canditate_region
 
+  # find a segment
   sum_chars = 0
   for seg in segs:
     print(seg)
     sum_chars += len(seg)
     if sum_chars >= point - canditate_region.begin():
       point_seg = sublime.Region((sum_chars - len(seg)) + canditate_region.begin(), canditate_region.begin() + sum_chars)
-      # print("({}) ({})".format((sum_chars - len(seg)) + canditate_region.a, point - canditate_region.a + sum_chars))
       return point_seg
