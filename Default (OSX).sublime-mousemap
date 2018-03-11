@@ -3,21 +3,18 @@
   {
     "button": "button1", "count": 2,
     "press_command": "drag_select_jp",
-    // "press_command": "drag_select",
-    // "press_args": {"by": "words"}
+    "command": "released"
   },
   {
     "button": "button1", "count": 2, "modifiers": ["super"],
     "press_command": "drag_select_jp",
-    "press_args": {"additive": true}
-    // "press_command": "drag_select",
-    // "press_args": {"by": "words", "additive": true}
+    "press_args": {"additive": true},
+    "command": "released"
   },
   {
     "button": "button1", "count": 2, "modifiers": ["alt"],
     "press_command": "drag_select_jp",
-    "press_args": {"subtractive": true}
-    // "press_command": "drag_select",
-    // "press_args": {"by": "words", "subtractive": true}
+    "press_args": {"subtractive": true},
+    "command": "released"
   },
 ]

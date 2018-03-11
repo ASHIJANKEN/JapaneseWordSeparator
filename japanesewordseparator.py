@@ -7,53 +7,89 @@ import sublime_plugin
 from tinysegmenter_python import segment
 import re
 
-# TextCommandクラスよりもこっちが先に呼び出される
-class JapaneseDragSelectCommand(sublime_plugin.EventListener):
-  def on_text_command(self, view, command_name, args):
-    if command_name == "drag_select_jp":
-      print("drag_select_called")
-    elif command_name == "drag_select_additive_jp":
-      print("drag_select_additive_called")
-    elif command_name == "drag_select_subtractive_jp":
-      print("drag_select_subtractive_called")
+# We can't detect a mouse release event, so we use "pressing" "to detect it.
+# "pressing" is True when we press the button, and "pressing" is False when we release the button.
+pressing = False
+point_hover = 0
 
+jp_pattern = u'[一-龠々〆ヵヶぁ-んァ-ヴｱ-ﾝﾞ]'
+reg = re.compile(jp_pattern)
+
+# This class detects mouse move while dragging.
+# It finds the closest point in the view to the mouse location, then expands a region you selecting now.
+class MouseMoveListener(sublime_plugin.EventListener):
+  # find the point
+  def on_hover(self, view, point, hover_zone):
+    global point_hover
+    point_hover = point
+    print("point : {}".format(point))
+
+    if pressing == True:
+      self.expand_region(view, point)
+
+  def expand_region(self, view, point):
+    regions = [r for r in view.sel()]
+    # print(regions)
+
+    new_canditate = view.word(point)
+    new_seg = find_seg_en_jp(view, new_canditate, point)
+
+    if(regions[-1].begin() <= new_seg.end()):
+      new_region = sublime.Region(regions[-1].begin(), new_seg.end())
+    else:
+      new_region = sublime.Region(new_seg.begin(), regions[-1].end())
+
+    regions[-1] = new_region
+    view.sel().clear()
+    view.sel().add_all(regions)
+    view.add_regions("override", view.sel())
+
+# Find a region
 class DragSelectJp(sublime_plugin.TextCommand):
-  sels_num = 0
-
   def run(self, edit, additive=False, subtractive=False):
-    print('***************************************************')
+    global pressing
+    pressing = True
+
+    point = self.view.sel()[-1].b
 
     if additive == False:
-      DragSelectJp.sels_num = 0
-      point = self.view.sel()[DragSelectJp.sels_num].b
       self.view.sel().clear()
-    else:
-      DragSelectJp.sels_num += 1
-      point = self.view.sel()[DragSelectJp.sels_num].b
-    print(DragSelectJp.sels_num)
 
-    # STの機能で単語選択
+    # sleect a word using API
+    # With this way, we can use "word_separators" in "Preferences.sublime-settings."
     canditate_region = self.view.word(point)
-    canditate_str = self.view.substr(canditate_region)
+    # print("({}) ({})".format(canditate_region.a, canditate_region.b))
 
-    # 選択範囲に日本語がなければregionの確定
-    if not re.search(u'[一-龠々〆ヵヶぁ-んァ-ヴｱ-ﾝﾞ]', canditate_str):
-      self.view.sel().add(canditate_region)
-      return
-
-    # 日本語があったらsegmenterをsegmentを見つける
-    segs = segment(canditate_str)
-    # print(segs)
-    if len(segs) == 1:
-      self.view.sel().add(canditate_region)
-      return
-    sum_chars = 0
-    for seg in segs:
-      print(seg)
-      sum_chars += len(seg)
-      if sum_chars >= point - canditate_region.a:
-        point_seg = sublime.Region((sum_chars - len(seg)) + canditate_region.a, canditate_region.a + sum_chars)
-        # print("({}) ({})".format((sum_chars - len(seg)) + canditate_region.a, point - canditate_region.a + sum_chars))
-        break
+    point_seg = find_seg_en_jp(self.view, canditate_region, point)
 
     self.view.sel().add(point_seg)
+
+class Released(sublime_plugin.TextCommand):
+  def run(self, edit):
+    global pressing
+    pressing = False
+
+
+def find_seg_en_jp(view, canditate_region, point):
+
+  canditate_str = view.substr(canditate_region)
+
+  # If there aren't any Japanese words
+  if not reg.search(canditate_str):
+    return canditate_region
+
+  # Fing a segment using tinysegmenter from the Japanese sentence.
+  segs = segment(canditate_str)
+
+  # If canditate_region contain only one word
+  if len(segs) == 1:
+    return canditate_region
+
+  sum_chars = 0
+  for seg in segs:
+    print(seg)
+    sum_chars += len(seg)
+    if sum_chars >= point - canditate_region.begin():
+      point_seg = sublime.Region((sum_chars - len(seg)) + canditate_region.begin(), canditate_region.begin() + sum_chars)
+      # print("({}) ({})".format((sum_chars - len(seg)) + canditate_region.a, point - canditate_region.a + sum_chars))
+      return point_seg
