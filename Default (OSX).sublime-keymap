@@ -1,0 +1,22 @@
+[
+    {
+    	"keys": ["super+left"],
+    	"command": "key_select_jp",
+    	"args": {"key": "left"}
+    },
+    {
+    	"keys": ["super+right"],
+    	"command": "key_select_jp",
+    	"args": {"key": "right"}
+  	},
+    {
+    	"keys": ["super+shift+left"],
+    	"command": "key_select_jp",
+    	"args": {"key": "left", "additive": true}
+    },
+    {
+    	"keys": ["super+shift+right"],
+    	"command": "key_select_jp",
+    	"args": {"key": "right", "additive": true}
+    }
+]

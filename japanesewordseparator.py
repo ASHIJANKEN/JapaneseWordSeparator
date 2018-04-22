@@ -61,7 +61,7 @@ class DragSelectJp(sublime_plugin.TextCommand):
     if additive == False:
       self.view.sel().clear()
 
-    # select a word using API
+    # Select a word using API
     # With this way, we can use "word_separators" in "Preferences.sublime-settings."
     canditate_region = self.view.word(point)
     point_seg = find_seg_en_jp(self.view, canditate_region, point)
@@ -72,49 +72,44 @@ class DragSelectJp(sublime_plugin.TextCommand):
 class KeySelectJp(sublime_plugin.TextCommand):
   def run(self, edit, additive=False, subtractive=False, key='none'):
 
+    now_cursor = self.view.sel()[-1]
+    cursor_pos = now_cursor.end()
+
     # Move mouse cursor
     if key == 'left':
-      point = max(self.view.sel()[-1].b - 1, 0)
+      tmp_cursor_pos = max(now_cursor.b - 1, 0)
     elif key == 'right':
-      point = min(self.view.sel()[-1].b + 1, self.view.size())
+      tmp_cursor_pos = min(now_cursor.b + 1, self.view.size())
 
-    if additive == False:
-      self.view.sel().clear()
-
-    # sleect a word using API
+    # Sleect a word using API
     # With this way, we can use "word_separators" in "Preferences.sublime-settings."
-    canditate_region = self.view.word(point)
+    canditate_region = self.view.word(tmp_cursor_pos)
 
-    point_seg = find_seg_en_jp(self.view, canditate_region, point)
+    point_seg = find_seg_en_jp(self.view, canditate_region, tmp_cursor_pos)
 
     # if aditive is true, expand/shrink selected regions.
     if additive == True:
       # Use list comprehension to convert regions from a sel object into an array.
       regions = [r for r in self.view.sel()]
 
-      if regions[-1].end() < point_seg.end():
-        new_region = sublime.Region(regions[-1].begin(), point_seg.end())
-      elif regions[-1].begin() < point_seg.end() < regions[-1].end():
-        if key == 'left':
-          new_region = sublime.Region(regions[-1].begin(), point_seg.end())
-        elif key == 'right':
-          new_region = sublime.Region(point_seg.begin(), regions[-1].end())
-      elif point_seg.begin() < regions[-1].begin():
-        new_region = sublime.Region(point_seg.begin(), regions[-1].end())
-      elif point_seg.begin() == regions[-1].begin() or point_seg.end() == regions[-1].end():
-        new_region = regions[-1]
+      if key == 'left':
+        regions[-1].b -= abs(point_seg.a - now_cursor.b)
+      elif key == 'right':
+        regions[-1].b += abs(point_seg.b - now_cursor.b)
 
-      regions[-1] = new_region
       self.view.sel().clear()
       self.view.sel().add_all(regions)
       self.view.add_regions("override", self.view.sel())
-      self.view.sel().add(point_seg)
 
-    # Set cursor position to edge of a new region
-    if key == 'left':
-      self.view.sel().add(sublime.Region(point_seg.a, point_seg.a))
-    elif key == 'right':
-      self.view.sel().add(sublime.Region(point_seg.b, point_seg.b))
+    else:
+      # Clear regions
+      self.view.sel().clear()
+
+      # Set cursor position to edge of a new region
+      if key == 'left':
+        self.view.sel().add(sublime.Region(point_seg.a, point_seg.a))
+      elif key == 'right':
+        self.view.sel().add(sublime.Region(point_seg.b, point_seg.b))
 
 # This is called when a mouse button is released.
 class Released(sublime_plugin.TextCommand):

@@ -22,7 +22,7 @@ $ git clone https://github.com/ASHIJANKEN/JapaneseWordSeparator.git
 ```
 これだけでインストールは完了です。
 
-今後Package Contr~~olからもインス~~トールできるようにする予定です。
+今後Package Controlからもインストールできるようにする予定です。
 
 ## 確認できている不具合など
 - Find Resultsページにおいて、ダブルクリックで当該箇所にジャンプできない。
