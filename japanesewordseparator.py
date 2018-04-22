@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import sublime
 import sublime_plugin
-from tinysegmenter_python import segment
+from .tinysegmenter_python import segment
 import re
 
 # We can't detect a mouse release event, so we use "pressing" "to detect it.
 # "pressing" is True when we press the button, and "pressing" is False when we release the button.
 pressing = False
 point_hover = 0
+start_region = sublime.Region(0, 0)
 
 jp_pattern = u'[一-龠々〆ヵヶぁ-んァ-ヴｱ-ﾝﾞ]'
 reg = re.compile(jp_pattern)
@@ -22,21 +20,30 @@ class MouseMoveListener(sublime_plugin.EventListener):
   def on_hover(self, view, point, hover_zone):
     global point_hover
     point_hover = point
-    print("point : {}".format(point))
+    # print("point : {}".format(point))
+    # print("pressing : {}".format(pressing))
 
     if pressing == True:
       self.expand_region(view, point)
 
   def expand_region(self, view, point):
+    # Use list comprehension to convert regions from a sel object into an array.
     regions = [r for r in view.sel()]
 
     new_canditate = view.word(point)
     new_seg = find_seg_en_jp(view, new_canditate, point)
 
-    if(regions[-1].begin() <= new_seg.end()):
-      new_region = sublime.Region(regions[-1].begin(), new_seg.end())
-    else:
-      new_region = sublime.Region(new_seg.begin(), regions[-1].end())
+    if regions[-1].end() < new_seg.end():
+      new_region = sublime.Region(start_region.begin(), new_seg.end())
+    elif new_seg.begin() < regions[-1].begin():
+      new_region = sublime.Region(new_seg.begin(), start_region.end())
+    elif regions[-1].begin() < new_seg.end() < regions[-1].end():
+      if start_region.begin() < new_seg.begin():
+        new_region = sublime.Region(start_region.begin(), new_seg.end())
+      else:
+        new_region = sublime.Region(new_seg.begin(), start_region.end())
+    elif new_seg.begin() == regions[-1].begin() or new_seg.end() == regions[-1].end():
+      new_region = start_region
 
     regions[-1] = new_region
     view.sel().clear()
@@ -46,10 +53,30 @@ class MouseMoveListener(sublime_plugin.EventListener):
 # Find a region
 class DragSelectJp(sublime_plugin.TextCommand):
   def run(self, edit, additive=False, subtractive=False):
-    global pressing
+    global pressing, start_region
     pressing = True
 
     point = self.view.sel()[-1].b
+
+    if additive == False:
+      self.view.sel().clear()
+
+    # select a word using API
+    # With this way, we can use "word_separators" in "Preferences.sublime-settings."
+    canditate_region = self.view.word(point)
+    point_seg = find_seg_en_jp(self.view, canditate_region, point)
+    start_region = point_seg
+    self.view.sel().add(point_seg)
+
+# Find region, move cursor by arrow keys.
+class KeySelectJp(sublime_plugin.TextCommand):
+  def run(self, edit, additive=False, subtractive=False, key='none'):
+
+    # Move mouse cursor
+    if key == 'left':
+      point = max(self.view.sel()[-1].b - 1, 0)
+    elif key == 'right':
+      point = min(self.view.sel()[-1].b + 1, self.view.size())
 
     if additive == False:
       self.view.sel().clear()
@@ -60,14 +87,42 @@ class DragSelectJp(sublime_plugin.TextCommand):
 
     point_seg = find_seg_en_jp(self.view, canditate_region, point)
 
-    self.view.sel().add(point_seg)
+    # if aditive is true, expand/shrink selected regions.
+    if additive == True:
+      # Use list comprehension to convert regions from a sel object into an array.
+      regions = [r for r in self.view.sel()]
 
+      if regions[-1].end() < point_seg.end():
+        new_region = sublime.Region(regions[-1].begin(), point_seg.end())
+      elif regions[-1].begin() < point_seg.end() < regions[-1].end():
+        if key == 'left':
+          new_region = sublime.Region(regions[-1].begin(), point_seg.end())
+        elif key == 'right':
+          new_region = sublime.Region(point_seg.begin(), regions[-1].end())
+      elif point_seg.begin() < regions[-1].begin():
+        new_region = sublime.Region(point_seg.begin(), regions[-1].end())
+      elif point_seg.begin() == regions[-1].begin() or point_seg.end() == regions[-1].end():
+        new_region = regions[-1]
+
+      regions[-1] = new_region
+      self.view.sel().clear()
+      self.view.sel().add_all(regions)
+      self.view.add_regions("override", self.view.sel())
+      self.view.sel().add(point_seg)
+
+    # Set cursor position to edge of a new region
+    if key == 'left':
+      self.view.sel().add(sublime.Region(point_seg.a, point_seg.a))
+    elif key == 'right':
+      self.view.sel().add(sublime.Region(point_seg.b, point_seg.b))
+
+# This is called when a mouse button is released.
 class Released(sublime_plugin.TextCommand):
   def run(self, edit):
     global pressing
     pressing = False
 
-
+# This method finds a segment which cursor position is within, and return it.
 def find_seg_en_jp(view, canditate_region, point):
 
   canditate_str = view.substr(canditate_region)
@@ -86,7 +141,7 @@ def find_seg_en_jp(view, canditate_region, point):
   # find a segment
   sum_chars = 0
   for seg in segs:
-    print(seg)
+    # print(seg)
     sum_chars += len(seg)
     if sum_chars >= point - canditate_region.begin():
       point_seg = sublime.Region((sum_chars - len(seg)) + canditate_region.begin(), canditate_region.begin() + sum_chars)
