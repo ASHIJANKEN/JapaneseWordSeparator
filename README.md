@@ -24,13 +24,19 @@ GIFを見て分かる通り、任意の場所までポインタを移動させ�
 | **Ctrl+Shift+左右の矢印キー** | 単語レベルでの範囲選択 |
 
 ## インストール方法
+### Gitからインストール
 [Preferences]>[Browse Packages...]で出てきたフォルダにこのリポジトリをクローンしてください。
 ```bash
 $ git clone https://github.com/ASHIJANKEN/JapaneseWordSeparator.git
 ```
 これだけでインストールは完了です。
 
-今後Package Controlからもインストールできるようにする予定です。
+### Package Controlからインストール
+1. Command Palleteを開く(**Ctrl/Cmd+Shift+P**)。
+1. `Package Controll: Install Package`を選択。
+1. `JapaneseWordSeparator`と検索してインストール。これで完了です。
+
+Package ControlはSublime Text用プラグインの管理ツールです("apt-get"のSublime Text版みたいなもの)。インストールしていない場合は[ここ](https://packagecontrol.io/installation)からインストールしてください。
 
 ## 確認できている不具合など
 - Find Resultsページにおいて、ダブルクリックで当該箇所にジャンプできない。
