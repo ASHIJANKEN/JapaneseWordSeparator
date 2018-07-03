@@ -19,7 +19,7 @@
                                     "base_file": "${packages}/JapaneseWordSeparator/Default (${platform}).sublime-keymap",
                                     "default": "[]"
                                 },
-                                "caption": "Keybindings"
+                                "caption": "Key Bindings"
                             },
                         ]
                     }
