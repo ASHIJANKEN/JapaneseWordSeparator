@@ -1,0 +1,30 @@
+[
+    {
+        "caption": "Preferences",
+        "id": "preferences",
+        "children":
+        [
+            {
+                "caption": "Package Settings",
+                "id": "package-settings",
+                "children":
+                [
+                    {
+                        "caption": "JapaneseWordSeparator",
+                        "children":
+                        [
+                            {
+                                "command": "edit_settings",
+                                "args": {
+                                    "base_file": "${packages}/JapaneseWordSeparator/Default (${platform}).sublime-keymap",
+                                    "default": "[]"
+                                },
+                                "caption": "Keybindings"
+                            },
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
