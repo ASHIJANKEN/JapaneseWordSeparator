@@ -1,4 +1,17 @@
 [
+
+    /* --For Mac users who had used 0.1.0 or 0.2.0 versions of this plugin--
+     * If you don't like newer version of key bindings, please add
+     * old key-bindings to "Default (OSX).sublime-keymap" in "User"
+     * folder.
+     * Here is an example of old key-binding.
+        {
+            "keys": ["super+left"],
+            "command": "key_select_jp",
+            "args": {"key": "left"}
+        },
+     */
+
     {
     	"keys": ["alt+left"],
     	"command": "key_select_jp",
