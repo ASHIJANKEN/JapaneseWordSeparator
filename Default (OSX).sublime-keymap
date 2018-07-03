@@ -1,21 +1,21 @@
 [
     {
-    	"keys": ["super+left"],
+    	"keys": ["alt+left"],
     	"command": "key_select_jp",
     	"args": {"key": "left"}
     },
     {
-    	"keys": ["super+right"],
+    	"keys": ["alt+right"],
     	"command": "key_select_jp",
     	"args": {"key": "right"}
   	},
     {
-    	"keys": ["super+shift+left"],
+    	"keys": ["alt+shift+left"],
     	"command": "key_select_jp",
     	"args": {"key": "left", "additive": true}
     },
     {
-    	"keys": ["super+shift+right"],
+    	"keys": ["alt+shift+right"],
     	"command": "key_select_jp",
     	"args": {"key": "right", "additive": true}
     }
