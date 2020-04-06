@@ -13,6 +13,7 @@ start_region = sublime.Region(0, 0)
 jp_pattern = u'[一-龠々〆ヵヶぁ-んァ-ヴｱ-ﾝﾞ]'
 reg = re.compile(jp_pattern)
 
+
 # This class detects mouse move while dragging.
 # It finds the closest point in the view to the mouse location, then expands a region you selecting now.
 class MouseMoveListener(sublime_plugin.EventListener):
@@ -23,7 +24,7 @@ class MouseMoveListener(sublime_plugin.EventListener):
     # print("point : {}".format(point))
     # print("pressing : {}".format(pressing))
 
-    if pressing == True:
+    if pressing is True:
       self.expand_region(view, point)
 
   def expand_region(self, view, point):
@@ -50,6 +51,7 @@ class MouseMoveListener(sublime_plugin.EventListener):
     view.sel().add_all(regions)
     view.add_regions("override", view.sel())
 
+
 # Find a region
 class DragSelectJp(sublime_plugin.TextCommand):
   def run(self, edit, additive=False, subtractive=False):
@@ -58,7 +60,7 @@ class DragSelectJp(sublime_plugin.TextCommand):
 
     point = self.view.sel()[-1].b
 
-    if additive == False:
+    if additive is False:
       self.view.sel().clear()
 
     # Select a word using API
@@ -67,6 +69,7 @@ class DragSelectJp(sublime_plugin.TextCommand):
     point_seg = find_seg_en_jp(self.view, canditate_region, point)
     start_region = point_seg
     self.view.sel().add(point_seg)
+
 
 # Find region, move cursor by arrow keys.
 class KeySelectJp(sublime_plugin.TextCommand):
@@ -82,14 +85,14 @@ class KeySelectJp(sublime_plugin.TextCommand):
       elif key == 'right':
         tmp_cursor_pos = min(region.b + 1, self.view.size())
 
-      # Sleect a word using API
+      # Select a word using API
       # With this way, we can use "word_separators" in "Preferences.sublime-settings."
       canditate_region = self.view.word(tmp_cursor_pos)
 
       point_seg = find_seg_en_jp(self.view, canditate_region, tmp_cursor_pos)
 
-      # if aditive is true, expand/shrink selected regions.
-      if additive == True:
+      # if additive is true, expand/shrink selected regions.
+      if additive is True:
 
         if key == 'left':
           region.b -= abs(point_seg.a - region.b)
@@ -109,11 +112,13 @@ class KeySelectJp(sublime_plugin.TextCommand):
     self.view.sel().add_all(regions)
     self.view.add_regions("override", self.view.sel())
 
+
 # This is called when a mouse button is released.
 class Released(sublime_plugin.TextCommand):
   def run(self, edit):
     global pressing
     pressing = False
+
 
 # This method finds a segment which cursor position is within, and return it.
 def find_seg_en_jp(view, canditate_region, point):
