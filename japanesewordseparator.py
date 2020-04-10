@@ -55,26 +55,39 @@ class MouseMoveListener(sublime_plugin.EventListener):
 # Find a region
 class DragSelectJp(sublime_plugin.TextCommand):
   def run(self, edit, additive=False, subtractive=False):
-    global pressing, start_region
+    global pressing, start_region, firepoint
 
     # suppress in Find Result
     if self.view.name() == "Find Results" and (not additive) and (not subtractive):
       self.view.run_command("double_click_at_caret")
       return
 
-    pressing = True
+    # safety check
+    if(firepoint is None):
+      print("firepoint is None! what's up?")
+      return
 
-    point = self.view.sel()[-1].b
+    pressing = True
 
     if additive is False:
       self.view.sel().clear()
 
     # Select a word using API
     # With this way, we can use "word_separators" in "Preferences.sublime-settings."
-    canditate_region = self.view.word(point)
-    point_seg = find_seg_en_jp(self.view, canditate_region, point)
+    canditate_region = self.view.word(firepoint)
+    point_seg = find_seg_en_jp(self.view, canditate_region, firepoint)
     start_region = point_seg
     self.view.sel().add(point_seg)
+
+    # safety lock
+    firepoint = None
+
+# Keeping text point on command fired, to global variable "firepoint"
+class LastCaretListener(sublime_plugin.EventListener):
+  def on_text_command(self, view, command_name, args):
+    global firepoint
+    if(command_name == "drag_select_jp"):
+      firepoint = view.window_to_text((args["event"]["x"], args["event"]["y"]))
 
 
 # Find region, move cursor by arrow keys.
