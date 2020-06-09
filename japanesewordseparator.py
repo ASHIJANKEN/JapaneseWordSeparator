@@ -56,6 +56,12 @@ class MouseMoveListener(sublime_plugin.EventListener):
 class DragSelectJp(sublime_plugin.TextCommand):
   def run(self, edit, additive=False, subtractive=False):
     global pressing, start_region
+
+    # suppress in Find Result
+    if self.view.name() == "Find Results" and (not additive) and (not subtractive):
+      self.view.run_command("double_click_at_caret")
+      return
+
     pressing = True
 
     point = self.view.sel()[-1].b
@@ -144,3 +150,16 @@ def find_seg_en_jp(view, canditate_region, point):
     if sum_chars >= point - canditate_region.begin():
       point_seg = sublime.Region((sum_chars - len(seg)) + canditate_region.begin(), canditate_region.begin() + sum_chars)
       return point_seg
+
+
+# Shooting a double-click at the caret position
+class DoubleClickAtCaretCommand(sublime_plugin.TextCommand):
+    def run(self, edit, **kwargs):
+        view = self.view
+        window_offset = view.window_to_layout((0,0))
+        vectors = []
+        for sel in view.sel():
+            vector = view.text_to_layout(sel.begin())
+            vectors.append((vector[0] - window_offset[0], vector[1] - window_offset[1]))
+        for idx, vector in enumerate(vectors):
+            view.run_command('drag_select', { 'event': { 'button': 1, 'count': 2, 'x': vector[0], 'y': vector[1] }, 'by': 'words', 'additive': idx > 0 or kwargs.get('additive', False) })
