@@ -60,6 +60,8 @@ class MouseMoveListener(sublime_plugin.EventListener):
 # Find a region
 class DragSelectJp(sublime_plugin.TextCommand):
   def run(self, edit, additive=False, subtractive=False):
+    global pressing, start_region, firepoint
+
     global pressing, editing_region, firepoint
 
     # suppress in Find Result
