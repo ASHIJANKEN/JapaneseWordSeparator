@@ -8,7 +8,7 @@ import re
 # "pressing" is True when we press the button, and "pressing" is False when we release the button.
 pressing = False
 point_hover = 0
-start_region = sublime.Region(0, 0)
+editing_region = sublime.Region(0, 0)
 
 jp_pattern = u'[一-龠々〆ヵヶぁ-んァ-ヴｱ-ﾝﾞ]'
 reg = re.compile(jp_pattern)
@@ -28,25 +28,30 @@ class MouseMoveListener(sublime_plugin.EventListener):
       self.expand_region(view, point)
 
   def expand_region(self, view, point):
+    global editing_region
+
     # Use list comprehension to convert regions from a sel object into an array.
     regions = [r for r in view.sel()]
+
+    target_index = regions.index(editing_region)
 
     new_canditate = view.word(point)
     new_seg = find_seg_en_jp(view, new_canditate, point)
 
-    if regions[-1].end() < new_seg.end():
-      new_region = sublime.Region(start_region.begin(), new_seg.end())
-    elif new_seg.begin() < regions[-1].begin():
-      new_region = sublime.Region(new_seg.begin(), start_region.end())
-    elif regions[-1].begin() < new_seg.end() < regions[-1].end():
-      if start_region.begin() < new_seg.begin():
-        new_region = sublime.Region(start_region.begin(), new_seg.end())
+    if regions[target_index].end() < new_seg.end():
+      new_region = sublime.Region(editing_region.begin(), new_seg.end())
+    elif new_seg.begin() < regions[target_index].begin():
+      new_region = sublime.Region(new_seg.begin(), editing_region.end())
+    elif regions[target_index].begin() < new_seg.end() < regions[target_index].end():
+      if editing_region.begin() < new_seg.begin():
+        new_region = sublime.Region(editing_region.begin(), new_seg.end())
       else:
-        new_region = sublime.Region(new_seg.begin(), start_region.end())
-    elif new_seg.begin() == regions[-1].begin() or new_seg.end() == regions[-1].end():
-      new_region = start_region
+        new_region = sublime.Region(new_seg.begin(), editing_region.end())
+    elif new_seg.begin() == regions[target_index].begin() or new_seg.end() == regions[target_index].end():
+      new_region = editing_region
 
-    regions[-1] = new_region
+    regions[target_index] = new_region
+    editing_region = new_region
     view.sel().clear()
     view.sel().add_all(regions)
     view.add_regions("override", view.sel())
@@ -55,7 +60,7 @@ class MouseMoveListener(sublime_plugin.EventListener):
 # Find a region
 class DragSelectJp(sublime_plugin.TextCommand):
   def run(self, edit, additive=False, subtractive=False):
-    global pressing, start_region, firepoint
+    global pressing, editing_region, firepoint
 
     # suppress in Find Result
     if self.view.name() == "Find Results" and (not additive) and (not subtractive):
@@ -63,8 +68,8 @@ class DragSelectJp(sublime_plugin.TextCommand):
       return
 
     # safety check
-    if(firepoint is None):
-      print("firepoint is None! what's up?")
+    if firepoint is None:
+      # print("firepoint is None! what's up?")
       return
 
     pressing = True
@@ -76,17 +81,18 @@ class DragSelectJp(sublime_plugin.TextCommand):
     # With this way, we can use "word_separators" in "Preferences.sublime-settings."
     canditate_region = self.view.word(firepoint)
     point_seg = find_seg_en_jp(self.view, canditate_region, firepoint)
-    start_region = point_seg
+    editing_region = point_seg
     self.view.sel().add(point_seg)
 
     # safety lock
     firepoint = None
 
+
 # Keeping text point on command fired, to global variable "firepoint"
 class LastCaretListener(sublime_plugin.EventListener):
   def on_text_command(self, view, command_name, args):
     global firepoint
-    if(command_name == "drag_select_jp"):
+    if command_name == "drag_select_jp":
       firepoint = view.window_to_text((args["event"]["x"], args["event"]["y"]))
 
 
@@ -158,7 +164,6 @@ def find_seg_en_jp(view, canditate_region, point):
   # find a segment
   sum_chars = 0
   for seg in segs:
-    # print(seg)
     sum_chars += len(seg)
     if sum_chars >= point - canditate_region.begin():
       point_seg = sublime.Region((sum_chars - len(seg)) + canditate_region.begin(), canditate_region.begin() + sum_chars)
@@ -169,10 +174,10 @@ def find_seg_en_jp(view, canditate_region, point):
 class DoubleClickAtCaretCommand(sublime_plugin.TextCommand):
     def run(self, edit, **kwargs):
         view = self.view
-        window_offset = view.window_to_layout((0,0))
+        window_offset = view.window_to_layout((0, 0))
         vectors = []
         for sel in view.sel():
             vector = view.text_to_layout(sel.begin())
             vectors.append((vector[0] - window_offset[0], vector[1] - window_offset[1]))
         for idx, vector in enumerate(vectors):
-            view.run_command('drag_select', { 'event': { 'button': 1, 'count': 2, 'x': vector[0], 'y': vector[1] }, 'by': 'words', 'additive': idx > 0 or kwargs.get('additive', False) })
+            view.run_command('drag_select', {'event': {'button': 1, 'count': 2, 'x': vector[0], 'y': vector[1]}, 'by': 'words', 'additive': idx > 0 or kwargs.get('additive', False)})
