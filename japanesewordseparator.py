@@ -9,6 +9,7 @@ import re
 pressing = False
 point_hover = 0
 editing_region = sublime.Region(0, 0)
+backup_regions = None
 point_seg = None
 
 jp_pattern = u'[一-龠々〆ヵヶぁ-んァ-ヴｱ-ﾝﾞ]'
@@ -31,11 +32,6 @@ class MouseMoveListener(sublime_plugin.EventListener):
   def expand_region(self, view, point):
     global editing_region
 
-    # Use list comprehension to convert regions from a sel object into an array.
-    regions = [r for r in view.sel()]
-
-    target_index = regions.index(editing_region)
-
     new_canditate = view.word(point)
     new_seg = find_seg_en_jp(view, new_canditate, point)
 
@@ -43,25 +39,21 @@ class MouseMoveListener(sublime_plugin.EventListener):
       new_region = sublime.Region(firepoint_seg.begin(), new_seg.end())
     elif new_seg.begin() < firepoint_seg.begin():
       new_region = sublime.Region(new_seg.begin(), firepoint_seg.end())
-    elif firepoint_seg.begin() < new_seg.end() < firepoint_seg.end():
-      if firepoint_seg.begin() < new_seg.begin():
-        new_region = sublime.Region(firepoint_seg.begin(), new_seg.end())
-      else:
-        new_region = sublime.Region(new_seg.begin(), firepoint_seg.end())
     elif new_seg.begin() == firepoint_seg.begin() or new_seg.end() == firepoint_seg.end():
       new_region = firepoint_seg
 
-    regions[target_index] = new_region
     editing_region = new_region
+    # print("editing_region: " + str(editing_region))
     view.sel().clear()
-    view.sel().add_all(regions)
+    view.sel().add_all(backup_regions)
+    view.sel().add(editing_region)
     view.add_regions("override", view.sel())
 
 
 # Find a region
 class DragSelectJp(sublime_plugin.TextCommand):
   def run(self, edit, additive=False, subtractive=False):
-    global pressing, editing_region, firepoint, firepoint_seg
+    global pressing, editing_region, firepoint, firepoint_seg, backup_regions
 
     # suppress in Find Result
     if self.view.name() == "Find Results" and (not additive) and (not subtractive):
@@ -78,12 +70,16 @@ class DragSelectJp(sublime_plugin.TextCommand):
     if additive is False:
       self.view.sel().clear()
 
+    backup_regions = [r for r in self.view.sel()]
+
     # Select a word using API
     # With this way, we can use "word_separators" in "Preferences.sublime-settings."
     canditate_region = self.view.word(firepoint)
     firepoint_seg = find_seg_en_jp(self.view, canditate_region, firepoint)
     editing_region = firepoint_seg
-    print("editing_region" + str(editing_region))
+    # print("firepoint_seg" + str(firepoint_seg))
+    self.view.add_regions("editing", [editing_region])
+
     self.view.sel().add(firepoint_seg)
 
 
@@ -134,16 +130,25 @@ class KeySelectJp(sublime_plugin.TextCommand):
     # Clear and reset regions
     self.view.sel().clear()
     self.view.sel().add_all(regions)
-    self.view.add_regions("override", self.view.sel())
+    self.view.add_regions("editing", self.view.sel())
 
 
 # This is called when a mouse button is released.
 class Released(sublime_plugin.TextCommand):
   def run(self, edit):
-    global pressing, firepoint, firepoint_seg
+    global pressing, firepoint, firepoint_seg, editing_region, backup_regions
+
+    if editing_region is not None:
+      self.view.sel().clear()
+      self.view.sel().add_all(backup_regions)
+      self.view.sel().add(editing_region)
+      self.view.add_regions("commit", self.view.sel())
+
     pressing = False
     firepoint = None
     firepoint_seg = None
+    editing_region = None
+    backup_region = None
 
 
 
