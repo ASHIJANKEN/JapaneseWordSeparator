@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 import sublime
 import sublime_plugin
@@ -14,6 +15,19 @@ point_seg = None
 
 jp_pattern = u'[一-龠々〆ヵヶぁ-んァ-ヴｱ-ﾝﾞ]'
 reg = re.compile(jp_pattern)
+
+class PluginEventListener(sublime_plugin.EventListener):
+  def on_query_context(self, view, key, operator, operand, match_all):
+    if key == 'cursor_on_jp_chars':
+      point = self.view.sel()[-1].b
+      # If character before cursor is Japanese
+      char = view.substr(sublime.Region(point - 1, point))
+      if reg.search(char):
+        print("cursor_on_jp_chars: True")
+        return True
+      else:
+        return False
+        print("cursor_on_jp_chars: False")
 
 
 # This class detects mouse move while dragging.

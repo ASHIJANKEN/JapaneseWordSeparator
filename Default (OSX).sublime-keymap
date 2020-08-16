@@ -17,21 +17,25 @@
         "command": "key_select_jp",
         "args": {"key": "left"},
         "context": [
-            { "key": "preceding_text", "operator": "regex_contains", "operand": "[\\p{Katakana}\\p{Hiragana}\\p{Han}。、，．！？　・「」：”（）ーﾟﾞ]" }
+            {
+                "key": "preceding_text",
+                "operator": "regex_contains",
+                "operand": "^[ぁ-んア-ン一-龠ヴ。、，．！？　・「」：”（）ーﾟﾞ]"
+            }
         ]
     },
     {
-        "keys": ["alt+right"],
-        "command": "key_select_jp",
-        "args": {"key": "right"},
+    	"keys": ["alt+right"],
+    	"command": "key_select_jp",
+    	"args": {"key": "right"},
         "context": [
             { "key": "preceding_text", "operator": "regex_contains", "operand": "[\\p{Katakana}\\p{Hiragana}\\p{Han}。、，．！？　・「」：”（）ーﾟﾞ]" }
         ]
-    },
+  	},
     {
-        "keys": ["alt+shift+left"],
-        "command": "key_select_jp",
-        "args": {"key": "left", "additive": true},
+    	"keys": ["alt+shift+left"],
+    	"command": "key_select_jp",
+    	"args": {"key": "left", "additive": true},
         "context": [
             { "key": "preceding_text", "operator": "regex_contains", "operand": "[\\p{Katakana}\\p{Hiragana}\\p{Han}。、，．！？　・「」：”（）ーﾟﾞ]" }
         ]
