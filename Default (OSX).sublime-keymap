@@ -13,23 +13,35 @@
      */
 
     {
-    	"keys": ["alt+left"],
-    	"command": "key_select_jp",
-    	"args": {"key": "left"}
+        "keys": ["alt+left"],
+        "command": "key_select_jp",
+        "args": {"key": "left"},
+        "context": [
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "[\\p{Katakana}\\p{Hiragana}\\p{Han}。、，．！？　・「」：”（）ーﾟﾞ]" }
+        ]
     },
     {
-    	"keys": ["alt+right"],
-    	"command": "key_select_jp",
-    	"args": {"key": "right"}
-  	},
-    {
-    	"keys": ["alt+shift+left"],
-    	"command": "key_select_jp",
-    	"args": {"key": "left", "additive": true}
+        "keys": ["alt+right"],
+        "command": "key_select_jp",
+        "args": {"key": "right"},
+        "context": [
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "[\\p{Katakana}\\p{Hiragana}\\p{Han}。、，．！？　・「」：”（）ーﾟﾞ]" }
+        ]
     },
     {
-    	"keys": ["alt+shift+right"],
-    	"command": "key_select_jp",
-    	"args": {"key": "right", "additive": true}
+        "keys": ["alt+shift+left"],
+        "command": "key_select_jp",
+        "args": {"key": "left", "additive": true},
+        "context": [
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "[\\p{Katakana}\\p{Hiragana}\\p{Han}。、，．！？　・「」：”（）ーﾟﾞ]" }
+        ]
+    },
+    {
+        "keys": ["alt+shift+right"],
+        "command": "key_select_jp",
+        "args": {"key": "right", "additive": true},
+        "context": [
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "[\\p{Katakana}\\p{Hiragana}\\p{Han}。、，．！？　・「」：”（）ーﾟﾞ]" }
+        ]
     }
 ]

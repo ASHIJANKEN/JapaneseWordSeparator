@@ -3,18 +3,27 @@
   {
     "button": "button1", "count": 2,
     "press_command": "drag_select_jp",
-    "command": "released"
+    "command": "released",
+    "context": [
+        { "key": "preceding_text", "operator": "regex_match", "operand": "[\\p{Lu}]" }
+    ]
   },
   {
     "button": "button1", "count": 2, "modifiers": ["super"],
     "press_command": "drag_select_jp",
     "press_args": {"additive": true},
-    "command": "released"
+    "command": "released",
+    "context": [
+        { "key": "preceding_text", "operator": "regex_match", "operand": "[\\p{Katakana}\\p{Hiragana}\\p{Han}。、，．！？　・「」：”（）ーﾟﾞ]+" }
+    ]
   },
   {
     "button": "button1", "count": 2, "modifiers": ["alt"],
     "press_command": "drag_select_jp",
     "press_args": {"subtractive": true},
-    "command": "released"
+    "command": "released",
+    "context": [
+        { "key": "preceding_text", "operator": "regex_match", "operand": "[\\p{Katakana}\\p{Hiragana}\\p{Han}。、，．！？　・「」：”（）ーﾟﾞ]+" }
+    ]
   },
 ]
