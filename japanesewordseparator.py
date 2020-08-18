@@ -11,6 +11,7 @@ point_hover = 0
 editing_region = sublime.Region(0, 0)
 backup_regions = None
 point_seg = None
+point_pos = None
 
 jp_pattern = u'[一-龠々〆ヵヶぁ-んァ-ヴｱ-ﾝﾞ]'
 reg = re.compile(jp_pattern)
@@ -53,16 +54,23 @@ class MouseMoveListener(sublime_plugin.EventListener):
 # Find a region
 class DragSelectJp(sublime_plugin.TextCommand):
   def run(self, edit, additive=False, subtractive=False):
-    global pressing, editing_region, firepoint, firepoint_seg, backup_regions
+    global pressing, editing_region, firepoint, firepoint_seg, backup_regions, point_pos
+    backup_regions = []
+
+    # safety check
+    if firepoint is None:
+      # print("firepoint is None! what's up?")
+      return
 
     # suppress in Find Result
     if self.view.name() == "Find Results" and (not additive) and (not subtractive):
       self.view.run_command("double_click_at_caret")
       return
 
-    # safety check
-    if firepoint is None:
-      # print("firepoint is None! what's up?")
+    # Suppress if the cursor is on an English word
+    char = self.view.substr(sublime.Region(firepoint - 1, firepoint))
+    if not reg.search(char):
+      self.view.run_command("drag_select", {"additive": additive, "subtractive": subtractive, "by": "words", "event": {"button": 1, "count": 2, "x": point_pos[0], "y": point_pos[1]}})
       return
 
     pressing = True
@@ -86,9 +94,11 @@ class DragSelectJp(sublime_plugin.TextCommand):
 # Keeping text point on command fired, to global variable "firepoint"
 class LastCaretListener(sublime_plugin.EventListener):
   def on_text_command(self, view, command_name, args):
-    global firepoint
+    global firepoint, point_pos
     if command_name == "drag_select_jp":
-      firepoint = view.window_to_text((args["event"]["x"], args["event"]["y"]))
+      print("LastCaretListener")
+      point_pos = (args["event"]["x"], args["event"]["y"])
+      firepoint = view.window_to_text(point_pos)
 
 
 # Find region, move cursor by arrow keys.
@@ -136,7 +146,7 @@ class KeySelectJp(sublime_plugin.TextCommand):
 # This is called when a mouse button is released.
 class Released(sublime_plugin.TextCommand):
   def run(self, edit):
-    global pressing, firepoint, firepoint_seg, editing_region, backup_regions
+    global pressing, firepoint, firepoint_seg, editing_region, backup_regions, point_pos
 
     if editing_region is not None:
       self.view.sel().clear()
@@ -148,8 +158,8 @@ class Released(sublime_plugin.TextCommand):
     firepoint = None
     firepoint_seg = None
     editing_region = None
-    backup_region = None
-
+    backup_regions = None
+    point_pos = None
 
 
 # This method finds a segment which cursor position is within, and return it.
@@ -178,6 +188,7 @@ def find_seg_en_jp(view, canditate_region, point):
 
 
 # Shooting a double-click at the caret position
+# This command is called on "Find Results" page.
 class DoubleClickAtCaretCommand(sublime_plugin.TextCommand):
     def run(self, edit, **kwargs):
         view = self.view
